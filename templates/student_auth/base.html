@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CareerWale{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 520px;
+        }
+        .logo { text-align: center; margin-bottom: 28px; }
+        .logo h1 { font-size: 2rem; font-weight: 800; color: #667eea; }
+        .logo p  { color: #888; font-size: 0.82rem; margin-top: 4px; }
+        h2 { font-size: 1.4rem; color: #333; margin-bottom: 22px; text-align: center; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+        input, textarea {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid #e8e8e8; border-radius: 8px;
+            font-size: 0.95rem; color: #333;
+            transition: border-color 0.2s; outline: none;
+        }
+        input:focus, textarea:focus { border-color: #667eea; }
+        textarea { resize: vertical; min-height: 75px; }
+        .checkbox-group { display: flex; align-items: flex-start; gap: 10px; }
+        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+        .checkbox-group label { margin-bottom: 0; font-size: 0.85rem; color: #666; line-height: 1.4; }
+        .btn {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: opacity 0.2s; margin-top: 10px;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        .alert {
+            padding: 11px 14px; border-radius: 8px;
+            margin-bottom: 14px; font-size: 0.88rem; display: none;
+        }
+        .alert-error   { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb; }
+        .alert-success { background: #f0fff4; color: #27ae60; border: 1px solid #c3e6cb; }
+        .link-row { text-align: center; margin-top: 18px; font-size: 0.9rem; color: #888; }
+        .link-row a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .link-row a:hover { text-decoration: underline; }
+        .spinner {
+            display: inline-block; width: 15px; height: 15px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 7px; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <h1>Physics Wallah</h1>
+        <p>Your Child's Future Deserves the Perfect Path</p>
+    </div>
+    {% block content %}{% endblock %}
+</div>
+<script>
+    const API_BASE = '/api';
+
+    function showAlert(id, msg, type='error') {
+        const el = document.getElementById(id);
+        el.className = 'alert alert-' + type;
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function hideAlert(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function setLoading(btn, loading) {
+        btn.disabled = loading;
+        if (loading) {
+            btn.dataset.orig = btn.textContent;
+            btn.innerHTML = '<span class="spinner"></span>Please wait...';
+        } else {
+            btn.textContent = btn.dataset.orig;
+        }
+    }
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

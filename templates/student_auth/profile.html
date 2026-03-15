@@ -1,0 +1,128 @@
+{% extends 'student_auth/base.html' %}
+{% block title %}My Profile - CareerWale{% endblock %}
+{% block extra_styles %}
+.container { max-width: 580px; }
+.profile-card { background: #f8f9ff; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+.profile-row  { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #eee; }
+.profile-row:last-child { border-bottom: none; }
+.profile-label { font-size: 0.82rem; font-weight: 600; color: #888; width: 45%; }
+.profile-value { font-size: 0.92rem; color: #333; font-weight: 500; width: 55%; text-align: right; word-break: break-word; }
+.avatar {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: white; margin: 0 auto 14px;
+}
+.btn-logout {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    margin-top: 0;
+}
+.loading-text { text-align: center; color: #888; padding: 20px 0; }
+{% endblock %}
+
+{% block content %}
+<div id="loading" class="loading-text">Loading your profile...</div>
+
+<div id="profile-content" style="display:none;">
+    <div class="avatar" id="avatar-initials">?</div>
+    <h2 id="student-name">Student Name</h2>
+
+    <div class="profile-card">
+        <div class="profile-row">
+            <span class="profile-label">Email</span>
+            <span class="profile-value" id="p-email">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Contact No</span>
+            <span class="profile-value" id="p-contact">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Address</span>
+            <span class="profile-value" id="p-address">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">School / College</span>
+            <span class="profile-value" id="p-school">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Course</span>
+            <span class="profile-value" id="p-course">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Terms Accepted</span>
+            <span class="profile-value" id="p-terms">—</span>
+        </div>
+        <div class="profile-row">
+            <span class="profile-label">Member Since</span>
+            <span class="profile-value" id="p-joined">—</span>
+        </div>
+    </div>
+
+    <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+</div>
+
+<div id="alert-box" class="alert"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        window.location.href = '/';
+    }
+
+    // Load profile on page load
+    async function loadProfile() {
+        try {
+            const res  = await fetch(`${API_BASE}/auth/profile/`, {
+                headers: { 'Authorization': 'Bearer ' + token },
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                const s = data.student;
+                document.getElementById('avatar-initials').textContent = s.name.charAt(0).toUpperCase();
+                document.getElementById('student-name').textContent    = s.name;
+                document.getElementById('p-email').textContent         = s.email;
+                document.getElementById('p-contact').textContent       = s.contact_no;
+                document.getElementById('p-address').textContent       = s.address;
+                document.getElementById('p-school').textContent        = s.school_college_name;
+                document.getElementById('p-course').textContent        = s.course_selection;
+                document.getElementById('p-terms').textContent         = s.terms_conditions_accepted ? '✅ Yes' : '❌ No';
+                document.getElementById('p-joined').textContent        = new Date(s.date_joined).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' });
+
+                document.getElementById('loading').style.display         = 'none';
+                document.getElementById('profile-content').style.display = 'block';
+            } else {
+                // Token expired → redirect to login
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/';
+            }
+        } catch (err) {
+            document.getElementById('loading').textContent = 'Failed to load profile. Please refresh.';
+        }
+    }
+
+    async function handleLogout() {
+        const refreshToken = localStorage.getItem('refresh_token');
+        try {
+            await fetch(`${API_BASE}/auth/logout/`, {
+                method:  'POST',
+                headers: {
+                    'Content-Type':  'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify({ refresh: refreshToken }),
+            });
+        } catch (err) {
+            // Even if request fails, clear tokens and redirect
+        }
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/';
+    }
+
+    loadProfile();
+</script>
+{% endblock %}
