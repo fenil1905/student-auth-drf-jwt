@@ -42,7 +42,7 @@ class StudentManager(BaseUserManager):
 class Student(AbstractBaseUser, PermissionsMixin):
     """
     Custom Student model using email as the unique identifier.
-    All 8 fields as per CareerWale task specification.
+    All 8 fields as per Physics Wallah task specification.
     """
 
     name                      = models.CharField(max_length=150)

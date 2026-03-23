@@ -10,7 +10,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         write_only=True, required=True, validators=[validate_password]
     )
     confirm_password = serializers.CharField(write_only=True, required=True)
-
+        
     class Meta:
         model  = Student
         fields = [
@@ -71,3 +71,21 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             'terms_conditions_accepted', 'date_joined',
         ]
         read_only_fields = fields
+
+
+class StudentUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating student profile.
+    Used by PUT and PATCH.
+    """
+    class Meta:
+        model  = Student
+        fields = [
+            'name',
+            'contact_no',
+            'address',
+            'school_college_name',
+            'course_selection',
+        ]
+        # email and password not included
+        # → cannot be changed here

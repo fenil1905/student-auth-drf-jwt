@@ -16,6 +16,7 @@ from .serializers import (
     OTPRequestSerializer,
     OTPVerifySerializer,
     StudentProfileSerializer,
+    StudentUpdateSerializer,
 )
 from .utils import generate_otp, send_otp_email, is_otp_valid
 
@@ -252,11 +253,184 @@ class StudentProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = StudentProfileSerializer(request.user)
+        serializer = StudentProfileSerializer(request.user) # convert to json.
         return Response(
             {
                 'message': 'Profile retrieved successfully.',
                 'student': serializer.data,
             },
             status=status.HTTP_200_OK
+        )
+
+# add  get api 
+class StudentListView(APIView):
+
+    """
+    GET /api/students/
+    Get all students list. Only admin can access.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'You do not have permission to view this.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Start with all students
+        students   = Student.objects.all()
+
+        # ----------Query Params ----------
+
+        # Filter by id
+        id = request.query_params.get('id')
+        if id:
+            students = students.filter(id__exact= id)
+        
+        # Filter by email
+        name =request.query_params.get('name')
+        if name:
+            students = students.filter(name__icontains=name)
+
+        # Filter by email
+        email = request.query_params.get('email')
+        if email:
+            students = students.filter(email__icontains=email)
+
+        # Filter by course
+        course = request.query_params.get('course')
+        if course:
+            students = students.filter(course_selection__icontains=course)
+
+        # Filter by school
+        school = request.query_params.get('school')
+        if school:
+            students = students.filter(school_college_name__icontains=school)
+
+        #Sorting newest student first.
+        ordering = request.query_params.get('ordering')
+        if ordering:
+            students = students.order_by(ordering)
+
+        # ---------------------------------
+        serializer = StudentProfileSerializer(students, many=True)
+        return Response(
+            {
+                'message': 'Students retrieved successfully.',
+                'count':    students.count(),
+                'students': serializer.data,
+            },
+            status=status.HTTP_200_OK
+        )
+
+class StudentDetailView(APIView):
+    """
+    GET /api/students/<id>/
+    Get single student by ID. Only admin can access.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        # Only admin/staff can see student details
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'You do not have permission to view this.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        try:
+            student    = Student.objects.get(pk=pk)
+            serializer = StudentProfileSerializer(student)
+            return Response(
+                {
+                    'message': 'Student retrieved successfully.',
+                    'student': serializer.data,
+                },
+                status=status.HTTP_200_OK
+            )
+        except Student.DoesNotExist:
+            return Response(
+                {'error': 'Student not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+
+class StudentUpdateView(APIView):
+    """
+    PUT    /api/students/<id>/update/   → update all fields
+    PATCH  /api/students/<id>/update/   → update some fields
+    """
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        # Only admin or the student themselves can update
+        try:
+            student = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response(
+                {'error': 'Student not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # partial=False → all fields required (PUT)
+        serializer = StudentUpdateSerializer(student, data=request.data, partial=False)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'message': 'Student updated successfully.',
+                    'student': serializer.data,
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        try:
+            student = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response(
+                {'error': 'Student not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # partial=True → only some fields required (PATCH)
+        serializer = StudentUpdateSerializer(student, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'message': 'Student partially updated successfully.',
+                    'student': serializer.data,
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StudentDeleteView(APIView):
+    """
+    DELETE /api/students/<id>/delete/   → delete student
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        # Only admin can delete
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'You do not have permission to delete.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        try:
+            student = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response(
+                {'error': 'Student not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        student.delete()
+        return Response(
+            {'message': 'Student deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
         )

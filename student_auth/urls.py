@@ -14,6 +14,12 @@ from .views import (
     OTPVerifyView,
     StudentLogoutView,
     StudentProfileView,
+    # New GET API's <-- add these 2
+    StudentDetailView,
+    StudentListView,
+    #UPdate and put
+    StudentUpdateView,
+    StudentDeleteView,
 )
 
 urlpatterns = [
@@ -32,4 +38,9 @@ urlpatterns = [
     path('api/auth/profile/',       StudentProfileView.as_view(),  name='api_profile'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(),    name='api_token_refresh'),
 
+    # GET APIs
+    path('api/students/',      StudentListView.as_view(),   name='api_student_list'),
+    path('api/students/<int:pk>/', StudentDetailView.as_view(), name='api_student_detail'),
+    path('api/students/<int:pk>/update/', StudentUpdateView.as_view(), name='api_student_update'),
+    path('api/students/<int:pk>/delete/', StudentDeleteView.as_view(), name='api_student_delete'),
 ]
